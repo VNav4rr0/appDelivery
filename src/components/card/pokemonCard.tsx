@@ -42,6 +42,15 @@ export function PokemonCard({ pokemon }: Props) {
                     />
                 ))}
             </View>
+            <View style={styles.infoContainer}>
+                <Text style={styles.info}>
+                    Altura: {pokemon.altura}
+                </Text>
+
+                <Text style={styles.info}>
+                    Peso: {pokemon.peso}
+                </Text>
+            </View>
         </TouchableOpacity>
     );
 }
@@ -83,5 +92,19 @@ const styles = StyleSheet.create({
         marginTop: 8,
         flexWrap: 'wrap',
         justifyContent: 'center',
+    },
+    typeBorder: {
+        borderWidth: 1,
+        borderColor: 'rgba(255, 255, 255, 0.5)',
+    },
+    
+    infoContainer: {
+        marginTop: 16,
+        width: '100%',
+    },
+
+    info: {
+        color: '#000',
+        textAlign: 'center',
     },
 });
