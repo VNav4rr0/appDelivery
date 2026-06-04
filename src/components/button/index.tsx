@@ -1,6 +1,7 @@
 import {
   TouchableOpacity,
   Text,
+  View,
   TouchableOpacityProps,
   StyleProp,
   ViewStyle,
@@ -20,10 +21,12 @@ export default function Button({
 }: Props) {
   return (
     <TouchableOpacity
-      activeOpacity={0.7}
+      activeOpacity={0.8}
       style={[Styles.button, style]}
       {...rest}
     >
+      <View style={Styles.pokeballLine} />
+
       <Text style={Styles.title}>
         {title}
       </Text>

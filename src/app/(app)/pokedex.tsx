@@ -11,6 +11,8 @@ import {
     StyleSheet,
     ActivityIndicator,
 } from 'react-native';
+import { router } from 'expo-router';
+import Button from '@/components/button';
 
 import { getPokemon } from '@/integration/pokemonintegration';
 
@@ -80,6 +82,22 @@ export default function Pokedex() {
                 onChangeText={setSearch}
             />
 
+            <View style={styles.headerButtons}>
+                <View style={styles.buttonWrapper}>
+                    <Button
+                        title="Perfil"
+                        onPress={() => router.push('/profile')}
+                    />
+                </View>
+
+                <View style={styles.buttonWrapper}>
+                    <Button
+                        title="Meu Time"
+                        onPress={() => router.push('/team')}
+                    />
+                </View>
+            </View>
+
             <FlatList
                 data={filteredPokemons}
                 keyExtractor={(item) =>
@@ -125,5 +143,17 @@ const styles = StyleSheet.create({
         color: '#FFF',
         marginTop: 12,
         fontSize: 18,
+    },
+
+    headerButtons: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: 20,
+        gap: 10,
+    },
+
+    buttonWrapper: {
+        flex: 1,
     },
 });

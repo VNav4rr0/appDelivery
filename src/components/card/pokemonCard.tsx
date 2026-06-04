@@ -2,10 +2,11 @@ import {
     View,
     Text,
     Image,
+    Button,
     StyleSheet,
     TouchableOpacity,
 } from 'react-native';
-
+import { useTeam } from '@/context/TeamContext';
 import { Pokemon } from '@/@types/pokemon';
 
 import { PokemonType } from '@/components/type/pokemonType';
@@ -18,6 +19,7 @@ interface Props {
 export function PokemonCard({ pokemon }: Props) {
     const primaryType = pokemon.tipos[0] || 'normal';
     const backgroundColor = pokemonTypeColors[primaryType] || '#A8A77A';
+    const { addPokemon } = useTeam();
 
     return (
         <TouchableOpacity style={[styles.card, { backgroundColor }]}>
@@ -51,6 +53,14 @@ export function PokemonCard({ pokemon }: Props) {
                     Peso: {pokemon.peso}
                 </Text>
             </View>
+            <TouchableOpacity
+                style={styles.addButton}
+                onPress={() => addPokemon(pokemon)}
+            >
+                <Text style={styles.addButtonText}>
+                    + Adicionar ao Time
+                </Text>
+            </TouchableOpacity>
         </TouchableOpacity>
     );
 }
@@ -97,7 +107,7 @@ const styles = StyleSheet.create({
         borderWidth: 1,
         borderColor: 'rgba(255, 255, 255, 0.5)',
     },
-    
+
     infoContainer: {
         marginTop: 16,
         width: '100%',
@@ -105,6 +115,18 @@ const styles = StyleSheet.create({
 
     info: {
         color: '#000',
+        textAlign: 'center',
+    },
+    addButton: {
+        backgroundColor: '#FFCB05',
+        paddingVertical: 10,
+        borderRadius: 10,
+        marginTop: 10,
+    },
+
+    addButtonText: {
+        color: '#121212',
+        fontWeight: 'bold',
         textAlign: 'center',
     },
 });

@@ -13,3 +13,9 @@ export interface Pokemon {
     altura: number;
     peso: number;
 }
+
+export type TeamPokemon = {
+  id: number;
+  nome: string;
+  imagem: string;
+};
