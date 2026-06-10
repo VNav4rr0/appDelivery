@@ -25,11 +25,17 @@ export default function Button({
       style={[Styles.button, style]}
       {...rest}
     >
+      <View style={Styles.topHalf} />
+
       <View style={Styles.pokeballLine} />
 
-      <Text style={Styles.title}>
-        {title}
-      </Text>
+      <View style={Styles.pokeballCenter} />
+
+      <View style={Styles.titleContainer} >
+        <Text style={Styles.title}>
+          {title}
+        </Text>
+      </View>
     </TouchableOpacity>
   );
 }

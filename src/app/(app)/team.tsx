@@ -1,3 +1,4 @@
+import React from 'react';
 import {
     View,
     Text,
@@ -5,11 +6,22 @@ import {
     Image,
     TouchableOpacity,
     StyleSheet,
-    Button
 } from 'react-native';
 import { router } from 'expo-router';
 
 import { useTeam } from '@/context/TeamContext';
+import { getColor } from '@/constants/colors';
+
+const translateType = (type: string) => {
+    const translation: Record<string, string> = {
+        fire: 'fogo', water: 'água', grass: 'grama', electric: 'elétrico',
+        psychic: 'psíquico', ice: 'gelo', dragon: 'dragão', dark: 'trevas',
+        fairy: 'fada', fighting: 'lutador', poison: 'veneno', ground: 'terra',
+        rock: 'pedra', bug: 'inseto', ghost: 'fantasma', steel: 'aço',
+        flying: 'voador', normal: 'normal'
+    };
+    return translation[type] || 'normal';
+};
 
 export default function Team() {
     const { team, removePokemon } = useTeam();
@@ -62,16 +74,24 @@ export default function Team() {
                         );
                     }
 
+                    const translatedTypes = item.tipos.map(translateType);
+                    const theme = getColor(translatedTypes);
+
                     return (
                         <TouchableOpacity
-                            style={styles.card}
+                            style={[
+                                styles.card,
+                                {
+                                    backgroundColor: theme.bg,
+                                    borderColor: theme.accent,
+                                    shadowColor: theme.accent,
+                                }
+                            ]}
                             onPress={() => removePokemon(item.id)}
+                            activeOpacity={0.8}
                         >
                             <Image
-                                source={{
-                                    uri:
-                                        item.imagem
-                                }}
+                                source={{ uri: item.imagem }}
                                 style={styles.image}
                             />
 
@@ -122,27 +142,17 @@ const styles = StyleSheet.create({
 
     card: {
         width: '48%',
-        backgroundColor: '#1E1E1E',
-
         borderRadius: 18,
-
         borderWidth: 2,
-        borderColor: '#FFCB05',
-
         alignItems: 'center',
-
         padding: 15,
-
         marginBottom: 16,
-
-        shadowColor: '#FFCB05',
-        shadowOpacity: 0.3,
-        shadowRadius: 8,
+        shadowOpacity: 0.6, 
+        shadowRadius: 10,
         shadowOffset: {
             width: 0,
             height: 4,
         },
-
         elevation: 8,
     },
 
@@ -167,20 +177,14 @@ const styles = StyleSheet.create({
 
     emptyCard: {
         width: '48%',
-
         height: 180,
-
         backgroundColor: '#1A1A1A',
-
         borderRadius: 18,
-
         borderWidth: 2,
         borderStyle: 'dashed',
         borderColor: '#555',
-
         justifyContent: 'center',
         alignItems: 'center',
-
         marginBottom: 16,
     },
 
@@ -197,14 +201,10 @@ const styles = StyleSheet.create({
     
     backButton: {
         alignSelf: 'flex-start',
-
         backgroundColor: '#FFCB05',
-
         paddingHorizontal: 16,
         paddingVertical: 10,
-
         borderRadius: 12,
-
         marginBottom: 20,
     },
 

@@ -53,14 +53,6 @@ export function PokemonCard({ pokemon }: Props) {
                     Peso: {pokemon.peso}
                 </Text>
             </View>
-            <TouchableOpacity
-                style={styles.addButton}
-                onPress={() => addPokemon(pokemon)}
-            >
-                <Text style={styles.addButtonText}>
-                    + Adicionar ao Time
-                </Text>
-            </TouchableOpacity>
         </TouchableOpacity>
     );
 }
@@ -90,7 +82,7 @@ const styles = StyleSheet.create({
 
     name: {
         color: '#FFF',
-        fontSize: 16,
+        fontSize: 24,
         fontWeight: 'bold',
         marginTop: 5,
         textTransform: 'capitalize',
@@ -109,24 +101,16 @@ const styles = StyleSheet.create({
     },
 
     infoContainer: {
+        flexDirection: 'row',
         marginTop: 16,
         width: '100%',
+        flexWrap: 'wrap',
+        justifyContent: 'center',
+        gap: 12,
     },
 
     info: {
         color: '#000',
-        textAlign: 'center',
-    },
-    addButton: {
-        backgroundColor: '#FFCB05',
-        paddingVertical: 10,
-        borderRadius: 10,
-        marginTop: 10,
-    },
-
-    addButtonText: {
-        color: '#121212',
-        fontWeight: 'bold',
         textAlign: 'center',
     },
 });
