@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { Pokemon } from '@/@types/pokemon';
+import { translateType } from '@/constants/colors';
 
 const API_URL = axios.create({
     baseURL: 'https://pokeapi.co/api/v2',
@@ -23,11 +24,14 @@ export const getPokemon = async (
                 nome: data.name,
                 index: data.id.toString().padStart(3, '0'),
                 tipos: data.types.map(
-                    (t: any) => t.type.name
+                    (t: any) => translateType(t.type.name)
                 ),
                 imagem:
                     data.sprites.other['official-artwork']
                         .front_default,
+                imagemShiny:
+                    data.sprites.other['official-artwork']
+                        .front_shiny,
                 altura: data.height,
                 peso: data.weight,
 

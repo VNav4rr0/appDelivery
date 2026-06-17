@@ -8,6 +8,8 @@ export interface Pokemon {
     index: string;
     nome: string;
     imagem: string;
+    imagemShiny?: string;
+    isShiny?: boolean;
     tipos: string[];
     poderes: Poder[];
     altura: number;

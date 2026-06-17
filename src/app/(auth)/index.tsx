@@ -9,6 +9,7 @@ import {
     Platform,
     KeyboardAvoidingView,
     ScrollView,
+    TouchableOpacity,
 } from 'react-native';
 
 import Button from '@/components/button';
@@ -32,7 +33,7 @@ export default function Index() {
     const { signIn } = useAuth();
     const { signOut } = useAuth();
 
-    function validateCredentials() {
+    async function validateCredentials() {
         if (!name.trim() || !senha.trim()) {
             setAlertData({
                 title: 'Campos obrigatórios',
@@ -43,21 +44,21 @@ export default function Index() {
             return;
         }
 
-        const success = signIn(name, senha);
+        setIsLoading(true);
+        setIsAlertVisible(false);
+        const success = await signIn(name, senha);
 
         if (success) {
-            setIsLoading(true);
-            setTimeout(() => {
-                router.push('/pokedex');
-            }, 5000);
+            router.push('/pokedex');
         } else {
+            setIsLoading(false);
             setAlertData({
                 title: 'Acesso negado',
                 message: 'Nome ou senha incorretos. Tente novamente.',
                 type: 'error',
             });
             setIsAlertVisible(true);
-            return signOut();
+            await signOut();
         }
     }
 
@@ -92,10 +93,16 @@ export default function Index() {
                 <View style={styles.card}>
                     <Text style={styles.cardTitle}>Autenticação</Text>
 
+                    {isAlertVisible && (
+                        <View style={[styles.alertContainer, { backgroundColor: Colors.semantic[alertData.type].bg, borderColor: Colors.semantic[alertData.type].border }]}>
+                            <Text style={[styles.alertText, { color: Colors.semantic[alertData.type].text }]}>{alertData.message}</Text>
+                        </View>
+                    )}
+
                     <View style={styles.fieldGroup}>
                         <Text style={styles.label}>Nome</Text>
                         <Input
-                            placeholder=""
+                            placeholder="Insira seu nome de usuário"
                             onChangeText={setName}
                             value={name}
                             autoCorrect={false}
@@ -105,7 +112,7 @@ export default function Index() {
                     <View style={styles.fieldGroup}>
                         <Text style={styles.label}>Senha</Text>
                         <Input
-                            placeholder=""
+                            placeholder="Insira sua senha"
                             secureTextEntry
                             onChangeText={setSenha}
                             value={senha}
@@ -113,9 +120,11 @@ export default function Index() {
                     </View>
 
                     <Button title="Entrar" onPress={validateCredentials} style={{ marginTop: 8 }} />
-                </View>
 
-                
+                    <TouchableOpacity onPress={() => router.push('/register')} style={styles.registerLink}>
+                        <Text style={styles.registerText}>Não tem uma conta? Cadastre-se</Text>
+                    </TouchableOpacity>
+                </View>
             </ScrollView>
         </KeyboardAvoidingView>
     );
@@ -177,5 +186,25 @@ const styles = StyleSheet.create({
     label: {
         color: Colors.whiteAlpha['50'], fontSize: 12,
         fontWeight: '700', letterSpacing: 1, textTransform: 'uppercase',
+    },
+    alertContainer: {
+        padding: 12,
+        borderRadius: 8,
+        borderWidth: 1,
+        marginBottom: 8,
+    },
+    alertText: {
+        fontSize: 13,
+        fontWeight: '600',
+        textAlign: 'center',
+    },
+    registerLink: {
+        marginTop: 16,
+        alignItems: 'center',
+    },
+    registerText: {
+        color: Colors.whiteAlpha['40'],
+        fontSize: 13,
+        textDecorationLine: 'underline',
     },
 });

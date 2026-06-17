@@ -5,6 +5,8 @@ import { ActivityIndicator, View } from "react-native";
 import { useAuth } from "@/context/AuthContext"
 import { Colors } from "@/constants/colors";
 
+import { SidebarLayout } from "@/components/sidebar/SidebarLayout";
+
 export default function AppLayout() {
     const { isAuthenticated, isLoading } = useAuth();
     if (isLoading) {
@@ -19,7 +21,9 @@ export default function AppLayout() {
         return <Redirect href="/" />;
     }
 
-    return <Stack screenOptions={{ headerShown: false }} />;
+    return (
+        <SidebarLayout>
+            <Stack screenOptions={{ headerShown: false }} />
+        </SidebarLayout>
+    );
 }
-
-// export const useAuth = () => useContext(AuthContext);

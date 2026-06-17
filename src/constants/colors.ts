@@ -88,3 +88,13 @@ export function getColor(types: string[]): { bg: string; accent: string; glow: s
   const primary = types[0] ?? 'normal';
   return Colors.types[primary] ?? Colors.types['normal'];
 }
+
+export const TYPE_TRANSLATION: Record<string, string> = {
+    fire: 'fogo', water: 'água', grass: 'grama', electric: 'elétrico',
+    psychic: 'psíquico', ice: 'gelo', dragon: 'dragão', dark: 'trevas',
+    fairy: 'fada', fighting: 'lutador', poison: 'veneno', ground: 'terra',
+    rock: 'pedra', bug: 'inseto', ghost: 'fantasma', steel: 'aço',
+    flying: 'voador', normal: 'normal'
+};
+
+export const translateType = (type: string) => TYPE_TRANSLATION[type] || 'normal';

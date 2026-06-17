@@ -1,29 +1,28 @@
-import { View, StyleSheet, Text, TouchableOpacity, ScrollView } from 'react-native';
-import { router } from 'expo-router';
-
-import { TrainerCard } from '@/components/trainer/trainerCard';
-import { TrainerStats } from '@/components/trainer/trainerStats';
-
+import { View, StyleSheet, Text, ScrollView, Platform } from 'react-native';
+import { TrainerCard } from '@/components/trainer-card';
+import { TrainerStats } from '@/components/trainer-stats';
+import { useAuth } from '@/context/AuthContext';
 import { useTeam } from '@/context/TeamContext';
+import { Colors } from '@/constants/colors';
 
 export default function Profile() {
-    const { team, wins, losses } = useTeam();
+    const { userData } = useAuth();
+    const { team, capturedReservoir } = useTeam();
 
-    const totalBattles = (wins || 0) + (losses || 0);
+    const username = userData?.username || 'Treinador';
+    const wins = userData?.vitorias || 0;
+    const losses = userData?.derrotas || 0;
+    const level = userData?.level || 1;
+
+    const totalBattles = wins + losses;
+    const totalCaptured = team.length + (capturedReservoir?.length || 0);
+    const currentXpProgress = wins % 5;
+    const winsToNextLevel = 5 - currentXpProgress;
+    const progressPercent = (currentXpProgress / 5) * 100;
 
     return (
         <View style={styles.container}>
-            <View style={styles.header}>
-                <TouchableOpacity
-                    style={styles.backButton}
-                    onPress={() => router.back()}
-                >
-                    <Text style={styles.backButtonText}>
-                        ← Voltar
-                    </Text>
-                </TouchableOpacity>
-                <Text style={styles.headerTitle}>Perfil do Treinador</Text>
-            </View>
+            <Text style={styles.headerTitle}>Perfil do Treinador</Text>
 
             <ScrollView
                 showsVerticalScrollIndicator={false}
@@ -31,15 +30,39 @@ export default function Profile() {
             >
                 <View style={styles.cardWrapper}>
                     <TrainerCard
-                        name="Kleber"
+                        name={username}
                         avatar="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRkh7jor5MG_2zbO9y-U3eqwa-MnDLHeMKBfA&s"
                     />
+                </View>
+
+                <View style={styles.levelCard}>
+                    <View style={styles.levelHeader}>
+                        <Text style={styles.levelLabel}>NÍVEL DO TREINADOR</Text>
+                        <Text style={styles.levelValue}>{level}</Text>
+                    </View>
+
+                    <View style={styles.progressBarBg}>
+                        <View style={[styles.progressBarFill, { width: `${progressPercent}%` }]} />
+                    </View>
+
+                    <Text style={styles.xpMessage}>
+                        {winsToNextLevel === 5 
+                            ? 'Subiu de nível! Falta(m) 5 vitórias para o próximo nível.'
+                            : `Falta(m) ${winsToNextLevel} vitória(s) para o nível ${level + 1}`}
+                    </Text>
                 </View>
 
                 <View style={styles.summaryContainer}>
                     <View style={styles.summaryBox}>
                         <Text style={styles.summaryValue}>{team.length}</Text>
-                        <Text style={styles.summaryLabel}>Capturados</Text>
+                        <Text style={styles.summaryLabel}>Time Ativo</Text>
+                    </View>
+
+                    <View style={styles.divider} />
+
+                    <View style={styles.summaryBox}>
+                        <Text style={styles.summaryValue}>{totalCaptured}</Text>
+                        <Text style={styles.summaryLabel}>Total Capturas</Text>
                     </View>
 
                     <View style={styles.divider} />
@@ -54,8 +77,8 @@ export default function Profile() {
                     <Text style={styles.sectionTitle}>Histórico de Combate</Text>
 
                     <TrainerStats
-                        wins={wins || 0}
-                        losses={losses || 0}
+                        wins={wins}
+                        losses={losses}
                     />
                 </View>
             </ScrollView>
@@ -63,43 +86,20 @@ export default function Profile() {
     );
 }
 
+const isWeb = Platform.OS === 'web';
+
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#080808',
-        paddingTop: 60,
+        backgroundColor: Colors.background,
+        paddingTop: 24,
     },
-    header: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'center',
-        marginBottom: 20,
-        minHeight: 48,
-    },
-
-    backButton: {
-        position: 'absolute',
-        left: 5,
-        zIndex: 10,
-
-        backgroundColor: '#FFCB05',
-
-        paddingHorizontal: 16,
-        paddingVertical: 10,
-        borderRadius: 12,
-    },
-
-    backButtonText: {
-        color: '#121212',
-        fontWeight: 'bold',
-        fontSize: 16,
-    },
-
     headerTitle: {
-        color: '#FFF',
-        fontSize: 20,
+        color: Colors.white,
+        fontSize: 22,
         fontWeight: 'bold',
         textAlign: 'center',
+        marginBottom: 16,
     },
     scrollContent: {
         paddingHorizontal: 20,
@@ -107,58 +107,99 @@ const styles = StyleSheet.create({
     },
     cardWrapper: {
         alignItems: 'center',
-        marginBottom: 30,
+        marginBottom: 20,
+    },
+    levelCard: {
+        backgroundColor: Colors.surface,
+        borderRadius: 20,
+        borderWidth: 1.5,
+        borderColor: Colors.primaryAlpha['30'],
+        padding: 20,
+        marginBottom: 20,
+        gap: 12,
+        ...Platform.select({
+            web: { boxShadow: '0 0 20px rgba(255,107,53,0.1)' } as any,
+        }),
+    },
+    levelHeader: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+    },
+    levelLabel: {
+        color: Colors.whiteAlpha['50'],
+        fontSize: 12,
+        fontWeight: '800',
+        letterSpacing: 1,
+    },
+    levelValue: {
+        color: Colors.btnPrimary,
+        fontSize: 28,
+        fontWeight: '900',
+        fontFamily: isWeb ? "'Press Start 2P', monospace" : undefined,
+    },
+    progressBarBg: {
+        height: 12,
+        backgroundColor: Colors.surfaceHighlight,
+        borderRadius: 6,
+        width: '100%',
+        overflow: 'hidden',
+    },
+    progressBarFill: {
+        height: '100%',
+        backgroundColor: Colors.btnPrimary,
+        borderRadius: 6,
+    },
+    xpMessage: {
+        color: Colors.whiteAlpha['65'],
+        fontSize: 12,
+        textAlign: 'center',
+        fontWeight: '500',
     },
     summaryContainer: {
         flexDirection: 'row',
-        backgroundColor: '#111111',
+        backgroundColor: Colors.surface,
         borderRadius: 20,
         padding: 20,
         alignItems: 'center',
         justifyContent: 'space-around',
-        borderWidth: 1,
-        borderColor: '#1C1C1C',
-        marginBottom: 30,
-
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.3,
-        shadowRadius: 6,
-        elevation: 5,
+        borderWidth: 1.5,
+        borderColor: Colors.whiteAlpha['12'],
+        marginBottom: 20,
     },
     summaryBox: {
         alignItems: 'center',
         flex: 1,
     },
     summaryValue: {
-        color: '#FFF',
+        color: Colors.white,
         fontSize: 28,
         fontWeight: '900',
     },
     summaryLabel: {
-        color: '#999999',
-        fontSize: 12,
-        fontWeight: 'bold',
+        color: Colors.whiteAlpha['50'],
+        fontSize: 11,
+        fontWeight: '800',
         textTransform: 'uppercase',
         marginTop: 4,
         letterSpacing: 1,
     },
     divider: {
-        width: 1,
+        width: 1.5,
         height: 40,
-        backgroundColor: '#333333',
+        backgroundColor: Colors.whiteAlpha['12'],
     },
     statsSection: {
-        backgroundColor: '#111111',
+        backgroundColor: Colors.surface,
         borderRadius: 20,
         padding: 20,
-        borderWidth: 1,
-        borderColor: '#1C1C1C',
+        borderWidth: 1.5,
+        borderColor: Colors.whiteAlpha['12'],
     },
     sectionTitle: {
-        color: '#FFF',
-        fontSize: 16,
-        fontWeight: 'bold',
+        color: Colors.white,
+        fontSize: 14,
+        fontWeight: '800',
         textTransform: 'uppercase',
         letterSpacing: 1,
         marginBottom: 16,

@@ -1,22 +1,23 @@
 import { View, Text, StyleSheet } from 'react-native';
-import { pokemonTypeColors } from '@/utils/pokemonColors';
+import { getColor } from '@/constants/colors';
 
 interface Props {
     type: string;
 }
 
 export function PokemonType({ type }: Props) {
+    const theme = getColor([type]);
     return (
         <View
             style={[
                 styles.badge,
                 {
-                    backgroundColor:
-                        pokemonTypeColors[type] || '#777',
+                    backgroundColor: theme.bg,
+                    borderColor: theme.accent,
                 },
             ]}
         >
-            <Text style={styles.text}>
+            <Text style={[styles.text, { color: theme.accent }]}>
                 {type.toUpperCase()}
             </Text>
         </View>
@@ -28,13 +29,10 @@ const styles = StyleSheet.create({
         paddingHorizontal: 12,
         paddingVertical: 4,
         borderRadius: 999,
-        borderWidth: 1,
-        borderColor: 'rgba(255, 255, 255, 0.5)',
-        backgroundColor: 'rgba(255, 255, 255, 0.15)',
+        borderWidth: 1.5,
     },
 
     text: {
-        color: '#fff',
         fontWeight: 'bold',
         fontSize: 12,
     },

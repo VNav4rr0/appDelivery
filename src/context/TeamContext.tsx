@@ -5,114 +5,157 @@ import React, {
   useState,
 } from 'react';
 
-import AsyncStorage from '@react-native-async-storage/async-storage';
-
+import axios from 'axios';
 import { Pokemon } from '@/@types/pokemon';
+import { useAuth } from './AuthContext';
+import { translateType } from '@/constants/colors';
 
 type TeamContextData = {
   team: Pokemon[];
-  wins: number;
-  losses: number;
-  addPokemon: (pokemon: Pokemon) => void;
-  removePokemon: (id: number) => void;
+  capturedReservoir: Pokemon[];
+  isLoadingTeam: boolean;
+  loadTeam: () => Promise<void>;
+  capturePokemon: (pokemonId: number) => Promise<Pokemon | null>;
+  swapPokemon: (removedId: number, newId: number) => Promise<boolean>;
   clearTeam: () => void;
-  registerWin: () => void;
-  registerLoss: () => void;
 };
 
+const API_BASE = 'https://lnh1dhp1mj.execute-api.us-east-1.amazonaws.com/api-pokemon';
+
 const TeamContext = createContext({} as TeamContextData);
+
+function mapAwsToPokemon(awsItem: any): Pokemon {
+  const id = parseInt(awsItem.index) || 0;
+  return {
+    id,
+    index: awsItem.index.toString().padStart(3, '0'),
+    nome: awsItem.name,
+    imagem: awsItem.image,
+    tipos: (awsItem.types || []).map(translateType),
+    poderes: (awsItem.abilities || []).map((a: any) => ({
+      nome: a.name,
+      forca: a.strength,
+    })),
+    altura: 0,
+    peso: 0,
+  };
+}
 
 export function TeamProvider({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const { isAuthenticated, userData } = useAuth();
   const [team, setTeam] = useState<Pokemon[]>([]);
-  const [wins, setWins] = useState(0);
-  const [losses, setLosses] = useState(0);
+  const [capturedReservoir, setCapturedReservoir] = useState<Pokemon[]>([]);
+  const [isLoadingTeam, setIsLoadingTeam] = useState(false);
 
   useEffect(() => {
-    loadTeam();
-  }, []);
+    if (isAuthenticated && userData?.userId) {
+      loadTeam();
+    } else {
+      setTeam([]);
+      setCapturedReservoir([]);
+    }
+  }, [isAuthenticated, userData]);
 
   async function loadTeam() {
-    const storageTeam = await AsyncStorage.getItem('@Team:pokemons');
-    const storageWins = await AsyncStorage.getItem('@Team:wins');
-    const storageLosses = await AsyncStorage.getItem('@Team:losses');
+    if (!userData?.userId) return;
+    setIsLoadingTeam(true);
+    try {
+      const response = await axios.get(`${API_BASE}/pokemon/v1/team?user-id=${userData.userId}`);
+      if (response.data) {
+        const awsTeam = response.data.team || [];
+        const awsCapture = response.data.capture || [];
 
-    if (storageTeam) setTeam(JSON.parse(storageTeam));
-    if (storageWins) setWins(Number(storageWins));
-    if (storageLosses) setLosses(Number(storageLosses));
+        setTeam(awsTeam.map(mapAwsToPokemon));
+        setCapturedReservoir(awsCapture.map(mapAwsToPokemon));
+      }
+    } catch (error) {
+      console.error('Erro ao buscar time da AWS:', error);
+    } finally {
+      setIsLoadingTeam(false);
+    }
   }
 
-  async function registerWin() {
-    const newWins = wins + 1;
-    setWins(newWins);
-    await AsyncStorage.setItem('@Team:wins', String(newWins));
+  async function capturePokemon(pokemonId: number): Promise<Pokemon | null> {
+    if (!userData?.userId) return null;
+    try {
+      const response = await axios.put(
+        `${API_BASE}/pokemon/v1/captured?user-id=${userData.userId}&pokemon-id=${pokemonId}`,
+        {}
+      );
+      if (response.data) {
+        await loadTeam();
+        
+        return {
+          id: pokemonId,
+          index: pokemonId.toString().padStart(3, '0'),
+          nome: `Pokemon #${pokemonId}`,
+          imagem: `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${pokemonId}.png`,
+          tipos: [],
+          poderes: [],
+          altura: 0,
+          peso: 0,
+        };
+      }
+      return null;
+    } catch (error) {
+      console.error('Erro ao capturar pokémon na AWS:', error);
+      return null;
+    }
   }
 
-  async function registerLoss() {
-    const newLosses = losses + 1;
-    setLosses(newLosses);
-    await AsyncStorage.setItem('@Team:losses', String(newLosses));
+  async function swapPokemon(removedId: number, newId: number): Promise<boolean> {
+    if (!userData?.userId) return false;
+    try {
+      const response = await axios.put(
+        `${API_BASE}/pokemon/v1/team?user-id=${userData.userId}&removed-pokemon=${removedId}&new-pokemon=${newId}`,
+        {
+          removedPokemon: removedId,
+          newPokemon: newId,
+        }
+      );
+      
+      if (response.data) {
+        const oldTeamIds = team.map(p => p.id.toString());
+        const newTeamOrder = oldTeamIds.map(id => id === removedId.toString() ? newId.toString() : id);
+
+        const orderRes = await axios.put(
+          `${API_BASE}/pokemon/v1/team?user-id=${userData.userId}`,
+          {
+            teamOrder: newTeamOrder,
+          }
+        );
+
+        if (orderRes.data) {
+          await loadTeam();
+          return true;
+        }
+      }
+      return false;
+    } catch (error) {
+      console.error('Erro ao substituir e reordenar pokémon na AWS:', error);
+      return false;
+    }
   }
 
-  async function saveTeam(
-    updatedTeam: Pokemon[]
-  ) {
-    setTeam(updatedTeam);
-
-    await AsyncStorage.setItem(
-      '@Team:pokemons',
-      JSON.stringify(updatedTeam)
-    );
-  }
-
-  async function addPokemon(
-    pokemon: Pokemon
-  ) {
-    const alreadyExists = team.some(
-      (item) => item.id === pokemon.id
-    );
-
-    if (alreadyExists) return;
-
-    if (team.length >= 6) return;
-
-    const updatedTeam = [...team, pokemon];
-
-    await saveTeam(updatedTeam);
-  }
-
-  async function removePokemon(
-    id: number
-  ) {
-    const updatedTeam = team.filter(
-      (pokemon) => pokemon.id !== id
-    );
-
-    await saveTeam(updatedTeam);
-  }
-
-  async function clearTeam() {
+  function clearTeam() {
     setTeam([]);
-
-    await AsyncStorage.removeItem(
-      '@Team:pokemons'
-    );
+    setCapturedReservoir([]);
   }
 
   return (
     <TeamContext.Provider
       value={{
         team,
-        addPokemon,
-        removePokemon,
+        capturedReservoir,
+        isLoadingTeam,
+        loadTeam,
+        capturePokemon,
+        swapPokemon,
         clearTeam,
-        registerWin,
-        registerLoss,
-        wins,
-        losses,
       }}
     >
       {children}
